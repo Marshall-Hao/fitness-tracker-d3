@@ -18,7 +18,7 @@ const graph = svg
 const x = d3.scaleTime().range([0, graphHeight]);
 const y = d3.scaleLinear().range([graphHeight, 0]);
 
-// axes group
+//todo: axes group
 const xAxisGroup = graph
   .append("g")
   .attr("class", "x-axis stroke-current text-white")
@@ -28,10 +28,45 @@ const yAxisGroup = graph
   .append("g")
   .attr("class", "y-axis stroke-current text-white");
 
+//todo: d3 line generator
+const line = d3
+  .line()
+  .x((d) => x(new Date(d.date)))
+  .y((d) => y(d.distance));
+//todo:line path element
+const path = graph.append("path");
+//todo:created dotted line group and append to graph
+const dottedLine = graph.append("g").attr("class", "lines").style("opacity", 0);
+//todo:create x dotted line
+const xDottedLine = dottedLine
+  .append("line")
+  .attr("stroke", "#aaaa")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", 4);
+//todo:create y dotted line
+const yDottedLine = dottedLine
+  .append("line")
+  .attr("stroke", "#aaaa")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", 4);
+
+//todo:update the data
 const update = (data) => {
+  const t = d3.transition().duration(1500);
+  data = data.filter((item) => item.activity === activity);
+  //todo: sort data based on date objects
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
   //todo: set scale domain
   x.domain(d3.extent(data, (d) => new Date(d.date)));
   y.domain([0, d3.max(data, (d) => d.distance)]);
+  //todo:update path data
+  path
+    .data([data]) //!array in an array for d3 line
+    .attr("fill", "none")
+    .attr("stroke", "#00bfa5")
+    .attr("stroke-width", 2)
+    .transition(t)
+    .attr("d", line);
 
   //todo:create circles for objects
   const circles = graph.selectAll("circle").data(data);
@@ -45,18 +80,22 @@ const update = (data) => {
     .enter()
     .append("circle")
     .attr("r", 4)
+    .attr("fill", "#ccc")
     .attr("cx", (d) => x(new Date(d.date)))
-    .attr("cy", (d) => y(d.distance))
-    .attr("fill", "#ccc");
+    .attr("cy", (d) => y(d.distance));
 
   //todo:remove exit points
   circles.exit().remove();
 
+  graph
+    .selectAll("circle")
+    .on("mouseover", handleMouseover)
+    .on("mouseout", handleMouseout);
   //todo:create axis
   const xAxis = d3
     .axisBottom(x)
     .ticks(4)
-    .tickFormat(d3.timeFormat("%m-%e %H:%M"));
+    .tickFormat(d3.timeFormat("%b %d %H:%M"));
   const yAxis = d3
     .axisLeft(y)
     .ticks(4)
@@ -95,3 +134,37 @@ db.collection("activity").onSnapshot((res) => {
   });
   update(data);
 });
+
+const handleMouseover = (e, d) => {
+  d3.select(e.currentTarget)
+    .transition()
+    .duration(100)
+    .attr("r", 8)
+    .attr("fill", "#fff");
+  //todo:set x dotted line cords
+  xDottedLine
+    .attr("x1", x(new Date(d.date)))
+    .attr("x2", x(new Date(d.date)))
+    .attr("y1", graphHeight)
+    .attr("y2", y(d.distance));
+
+  //todo:set y dotted line cords
+  yDottedLine
+    .attr("x1", 0)
+    .attr("x2", x(new Date(d.date)))
+    .attr("y1", y(d.distance))
+    .attr("y2", y(d.distance));
+
+  //todo:show the dotted line group
+  dottedLine.style("opacity", 1);
+};
+
+const handleMouseout = (e, d) => {
+  d3.select(e.currentTarget)
+    .transition()
+    .duration(100)
+    .attr("r", 4)
+    .attr("fill", "#ccc");
+  //todo:hide the dotted line group(opacity 0)
+  dottedLine.style("opacity", 0);
+};
