@@ -1,12 +1,13 @@
-const margin = { top: 40, right: 20, bottom: 50, left: 100 };
-const graphWidth = 560 - margin.left - margin.right;
+const margin = { top: 40, right: 20, bottom: 50, left: 40 };
+const graphWidth = 377;
 const graphHeight = 400 - margin.top - margin.bottom;
 
 const svg = d3
   .select(".canvas")
   .append("svg")
-  .attr("width", graphWidth + margin.left + margin.right)
-  .attr("height", graphHeight + margin.top + margin.bottom);
+  .attr("width", graphWidth)
+  .attr("height", graphHeight + margin.top + margin.bottom)
+  .attr("class", "justify-self-center");
 
 const graph = svg
   .append("g")
@@ -52,7 +53,7 @@ const yDottedLine = dottedLine
 
 //todo:update the data
 const update = (data) => {
-  const t = d3.transition().duration(1500);
+  const t = d3.transition().duration(500);
   data = data.filter((item) => item.activity === activity);
   //todo: sort data based on date objects
   data.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -65,7 +66,6 @@ const update = (data) => {
     .attr("fill", "none")
     .attr("stroke", "#00bfa5")
     .attr("stroke-width", 2)
-    .transition(t)
     .attr("d", line);
 
   //todo:create circles for objects
@@ -92,10 +92,7 @@ const update = (data) => {
     .on("mouseover", handleMouseover)
     .on("mouseout", handleMouseout);
   //todo:create axis
-  const xAxis = d3
-    .axisBottom(x)
-    .ticks(4)
-    .tickFormat(d3.timeFormat("%b %d %H:%M"));
+  const xAxis = d3.axisBottom(x).ticks(4).tickFormat(d3.timeFormat("%b %d"));
   const yAxis = d3
     .axisLeft(y)
     .ticks(4)
